@@ -1,0 +1,474 @@
+2008-06-15
+
+	* gtk-dialog.c: Don't try to destroy the submenu when we've
+	already destroyed the menu.  Linux doesn't complain about this,
+	but Windows does.
+
+	* packaging/windows/pidgin-otr.msi: Bump version number.
+
+	* Makefile.mingw: Add tooltipmenu.o to link line.
+
+	* Release 3.2.0.
+
+2008-06-13
+
+	* po/de.po: Updated German translation from Michael Meier
+	<mail@code.mmsources.de>
+
+	* README: Updated, ready for release of 3.2.0.
+
+	* dialogs.h: Remove unused FINGERPRINT_HELPURL.
+
+	* gtk-dialog.c: Remove dead (#if 0) code.
+
+2008-06-11
+
+	* gtk-dialog.c: A small change to aid in i18n from Őry Máté
+	<orymate@gmail.com>
+
+	* po/hu.po: Updated Hungarian translation from Őry Máté
+	<orymate@gmail.com>
+
+2008-05-30
+
+	* gtk-dialog.c: The new toolbar OTR button now uses the standard
+	OTR menu.
+
+	* gtk-dialog.c: The buddy and status items in the OTR menu are
+	no longer selectable.
+
+	* gtk-ui.c: Specify that the OTR button shows up in the toolbar
+	now.
+
+	* gtk-dialog.c: Added a context-sensitive Help button to the
+	Authenticate Buddy dialog.
+
+	* gtk-dialog.c: Revamp of Authenticate Buddy dialog, based on a
+	mockup by hcat@gmx.net
+
+2008-05-29
+
+	* gtk-ui.c:
+	* gtk-dialog.c: Try moving the OTR button to the toolbar, based
+	on an idea from Pontus Andersson at
+	http://blog.pesa.se/2007/09/25/goodbye-big-bloated-otr-button/
+
+	* gtk-dialog.c: Some changes to the authenticate buddy dialog;
+	more to come.
+
+	* gtk-dialog.c: Some strings were missing _(), and others had
+	them unnecessarily.
+
+	* po/de.po: Updated German translation from Michael Meier
+	<mail@code.mmsources.de>
+
+2008-05-28
+
+	* tooltipmenu.[ch]: New classes to allow tooltips on menus.
+
+	* otr-icons.h: New OTR icons from <cyrus_xiii@yahoo.com>.
+
+	* README:
+	* AUTHORS:
+	* *.[ch]: Update copyright dates to 2004-2008 and add Rob Smits
+	as an author. (Rob wrote the new gtk-dialog stuff to handle user
+	authentication with an explicit question, inserted inline OTR
+	icons into the conversation when the status changes, and moved
+	the OTR button to the menu bar.)
+
+	* gtk-ui.c: Updated variable names to reflect the (old) change
+	from "OTR Options" to "OTR Settings".
+
+	* ui.h:
+	* ui.c:
+	* gtk-ui.c: Added new OTR UI Options section of the
+	configuration panel, which currently controls only whether the
+	old OTR button will still show up.
+
+	* dialogs.h:
+	* dialogs.c:
+	* gtk-dialog.c: 
+	* otr-plugin.h:
+	* otr-plugin.c: Support starting the SMP authentication with an
+	explicit question.
+
+	* otr-plugin.c: Better handling of the case where an SMP message
+	fails a verification step.
+
+	* configure.ac:
+	* Makefile.mingw: Update version number to 3.2.0.
+
+	* gtk-dialog.c: Made new OTR menus (one master one, and one for
+	each active conversation in the window) that replace the old OTR
+	button.  [The old button is still available as an option, but
+	the menu is always present.]
+
+	* gtk-dialog.c: OTR icons are inserted inline into the
+	conversation when the OTR status changes.
+
+	* configure.ac:
+	* po/ar.po:
+	* po/de.po:
+	* po/ru.po: New translations:
+	Arabic (Ahmad Gharbeia ﺄﺤﻣﺩ ﻍﺮﺒﻳﺓ <gharbeia@gmail.com>),
+	German (Thorsten Mühlfelder <thenktor@gmx.de>),
+	Hungarian (Mate Ory <orymate@gmail.com>),
+	Russian (Sergei Smirnov <moscow@hro.org>)
+
+	* dialogs.h: Help URLs now have version numbers in them, so the
+	appropriate help page can be served.
+
+	* Makefile.am: Include new files in compilation and distribution
+	targets.
+
+	* gtk-dialog.c: Added "What's this?" item to OTR menu
+
+	* gtk-dialog.c: Name of authentication dialog is now
+	"Authenticate Buddy" with a capital "B".
+
+	* gtk-dialog.c: Authentication dialog now says "Authentication
+	Options" instead of "Other Authentication Options".
+
+2007-07-28
+
+	* configure.ac: Fix PKG_CHECK_MODULES so that it gives a
+	sensible error if the packages aren't found
+
+	* Makefile.mingw:
+	* po/Makefile.mingw: Cleaned up Makefile.mingw files, removed
+	"install" target, added "zip" target
+
+	* packaging/windows/pidgin-otr.nsi: Install and uninstall the
+	translation files
+
+2007-07-26
+
+	* gtk-dialog.c:
+	* otr-plugin.c: ISO C cleanups (no mixing declarations with code)
+
+	* otr-plugin.c: Defend against potential NULL pointer
+	dereferences
+
+	* gtk-dialog.c: The SMP secret window should grab focus, but
+	only if the user requested to authenticate buddy (and not if it
+	popped up because the remote side asked for it)
+
+	* Makefile.mingw: Statically link libintl and libiconv
+
+2007-07-24
+
+	* INSTALL: Added information about i18n; added information about
+	linking libgcrypt statically
+
+	* otr-plugin.c: Added support for transparent fragmentation of
+	large messages
+
+	* Most files: Updated copyright information
+
+2007-07-22
+
+	* configure.ac: Check for libpurple and use a recent format for
+	AC_INIT/AM_INIT_AUTOMAKE, based on a patch from <synx13@sf.net>.
+
+2007-07-18
+
+	* gtk-ui.c: Simplify account list option menu in Config UI,
+	thanks to Gabriel Schulhof <nix@go-nix.ca>.
+
+	* gtk-ui.c: Reorder the tabs in the Config UI so that Config is
+	first.
+
+	* README: Updated to reflect new tab ordering, and new
+	"Don't log OTR conversations" option.
+
+	* gtk-dialog.c: Fixed a bug in the verify fingerprint dialog in
+	the unlikely event that a fingerprint exists in the fingerprints
+	file with no corresponding key for the local account in the
+	private keys file.
+
+2007-07-17
+
+	* dialogs.c:
+	* dialogs.h:
+	* gtk-dialog.c: Removed Verify fingerprint and View secure
+	session id menu options.  Added "Advanced..." button to
+	Authenticate buddy dialog, which brings up the old Verify
+	fingerprint dialog.  The Authenticate buddy dialog now allows
+	users to authenticate their buddies without ever seeing a
+	fingerprint.
+
+2007-07-10
+
+	* dialogs.c:
+	* dialogs.h:
+	* gtk-dialog.c:
+	* gtk-ui.c:
+	* otr-plugin.c:
+	* ui.c:
+	* ui.h: Added init() and cleanup() callbacks to the ui and
+	dialog subsystems that are called when the plugin is loaded and
+	unloaded respectively.
+
+	* gtk-dialog.c: Fixed bug where multiple OTR buttons in one
+	window would cause pidgin to crash when the window is closed.
+
+2007-07-08
+
+	* otr-plugin.c:
+	* gtk-dialog.c:
+	* gtk-ui.c: Added an option to not log OTR conversations.
+
+	* gtk-ui.c:
+	* ui.c:
+	* ui.h: Generalized find_policy to get_prefs, allowing for other
+	preferences to be available.
+
+2007-07-07
+
+	* INSTALL: Update dependency information
+
+	* Makefile.am:
+	* Makefile.mingw:
+	* configure.ac:
+	* gtk-dialog.c:
+	* gtk-ui.c:
+	* makedist:
+	* otr-plugin.c:
+	* ui.c: i18n, thanks to Thomas B. <Tommy.B@gmx.net>.
+
+2007-05-06
+
+	* Makefile.am:
+	* configure.ac:
+	* dialogs.c:
+	* dialogs.h:
+	* gtk-dialog.c:
+	* gtk-dialog.h:
+	* gtk-ui.c:
+	* gtk-ui.h:
+	* otr-plugin.c:
+	* otr-plugin.h:
+	* ui.c:
+	* ui.h: Porting to Pidgin 2.0.0 thanks to Reza Jelveh
+	<reza.jelveh@tuhh.de>.
+
+	* packaging/windows/gaim-otr.nsi:
+	* Makefile.mingw: Porting the Windows version to Pidgin 2.0.0.
+
+2006-11-28
+
+	* Makefile.mingw: Build under newer mingw cross-compilation
+	environment.
+
+	* gtk-dialog.c: Change "gtkstock.h" to "gaimstock.h" to match
+	gaim-2.0.0beta5.
+
+	* packaging/windows/gaim-otr.nsi: New version from Paul.
+
+2006-07-24
+
+	* otr-plugin.c: Use g_fopen() to open the otr files, so that on
+	Windows, the UTF8 filename encoding is respected.
+
+2006-01-20
+
+	* otr-plugin.c: Track the gaim-2 API changes.
+
+2005-12-18
+
+	* gtk-dialog.c:
+	* otr-plugin.c: Compile against either gaim-1.x or gaim-2.x,
+	based on a patch from Dustin Howett <alaricx@gmail.com>.
+
+2005-11-02
+
+	* INSTALL: Add instruction for doing autoreconf from CVS
+	version, if your libotr.m4 is in a nonstandard place.
+
+	* Makefile.mingw:
+	* README:
+	* configure.ac: Release version 3.0.0
+
+	* README: Update UI instructions for version 3.0.0
+
+2005-10-27
+
+	* gtk-dialog.c: Better icons
+
+	* gtk-dialog.c: Make the text of dialog boxes selectable
+
+2005-10-19
+
+	* dialogs.h:
+	* dialogs.c:
+	* gtk-dialog.c:
+	* otr-plugin.c: Track libotr API change: protocol_version is now
+	part of the ConnContext, and not passed separately to the
+	gone_secure() and still_secure() plugins.
+
+	* otr-plugin.c: Removed automatic sending of
+	OTRL_TLV_DISCONNECTED at quitting time, since it causes
+	unreadable messages to be sent to people with clients who don't
+	send those messages.
+
+	* packaging/fedora/gaim-otr.spec: Patches from Paul
+
+2005-10-16
+
+	* Conform to the new libotr API.
+
+2005-08-04
+
+	* otr-plugin.c: Disconnect all contexts when gaim is about to
+	quit.
+
+2005-07-29
+
+	* otr-plugin.c (confirm_fingerprint_cb): Match the changing
+	libotr API.
+
+2005-06-24
+
+	* README:
+	* Makefile.mingw:
+	* packaging/fedora/gaim-otr.spec:
+	* packaging/windows/gaim-otr.nsi:
+	* configure.ac: Change version to 3.0.0 (but don't yet release)
+
+	* Makefile.mingw: add -lgtk_pixbuf-2.0-0 for the OTR button
+	pixmaps.
+
+	* configure.ac: Require libotr 3.x.
+
+	* dialogs.h:
+	* dialogs.c (otrg_dialog_unknown_fingerprint): This function now
+	merely informs the user that a new fingerprint has been
+	received, and doesn't require the user to confirm it before it
+	can be used.
+
+	* dialogs.h:
+	* dialogs.c (otrg_dialog_verify_fingerprint): New function to
+	allow the user to confirm the authenticity of a fingerprint.
+
+	* dialogs.h: Add #defines for the online help URLs.
+
+	* gtk-dialog.c: There are now three states a conversation can be
+	in: Not Private (not using OTR), Unverified (using OTR, but to a
+	fingerprint that hasn't been verified, so you are subject to a
+	straightforward active attack), and Private (using OTR with a
+	verified fingerprint).  There are new icons for these states
+	that appear in the OTR button.
+
+	* gtk-dialog.c: Callers of create_dialog can now specify
+	additional widgets to appear in the dialog boxes.  We use this
+	primarily for the "What's this?" help widgets.
+
+	* gtk-dialog.c (otrg_gtk_dialog_unknown_fingerprint): This
+	function no longer has to deal with callbacks to get the user's
+	response to the new fingerprint.
+
+	* gtk-dialog.c: Right-clicking the OTR button now produces an
+	OTR menu, with options to start or end the private conversation,
+	verify the fingerprint, view the secure session id, or get help.
+
+	* gtk-dialog.c (dialog_update_label_conv): Have the OTR button
+	obey the user's requested style (text only, pictures only,
+	pictures and text, none).  Note that if the user chooses "none",
+	there's currently no way to reach the aforementioned menu.
+
+	* gtk-dialog.c: The "private connection established", "private
+	connection refreshed", and "private connection ended" messages
+	no longer pop up dialog boxes.  Instead, they appear inline in
+	the conversation window.  The session id and fingerprint which
+	used to appear in the "private connection established" dialog
+	are now viewable via the OTR button right-click menu.
+
+	* gtk-dialog.c: New dialog to view and verify fingerprints.
+
+	* gtk-dialog.c: New dialog to view secure session id.
+
+	* gtk-ui.c: New "Verify fingerprint" button in the plugin UI,
+	and rearrangement of the (now four) buttons into a 2x2 table.
+
+	* gtk-ui.c: New "Verified" column in the Known Fingerprints
+	table.
+
+	* otr-plugin.c (confirm_fingerprint_cb): This function no longer
+	has to deal with callbacks due to the change in the libotr API.
+
+	* otr-plugin.h:
+	* otr-plugin.c (otrg_plugin_write_fingerprints): Refactored this
+	function so that other parts of the code can call it.
+
+	* otr-plugin.h:
+	* otr-plugin.c (otrg_plugin_conv_to_context)
+	(otrg_plugin_context_to_conv, otrg_plugin_context_to_trust): New
+	functions.
+
+2005-05-27
+
+	* otr-plugin.c:
+	* gtk-dialog.c: Replace the OTR button in the button box if the
+	user changes the button style (which causes gaim to remove all
+	the buttons, and only replace its own).
+
+	* gtk-dialog.c: Add a right-button context menu to the OTR
+	button.  Currently, it only has one entry, which has the same
+	effect as clicking the button; eventually, you'll be able to do
+	other things here, like getting the info currently in the
+	"Private Connection Established" dialog.  This also opens the
+	door to making the button functionality available if the user
+	hides his buttons completely (if we can find a place to make
+	this context menu appear; say, on some F-key?).
+
+	* otr-plugin.c (notify_cb): Initialize gaimlevel so that -Wall
+	stops complaining, even though there's no situation in which it
+	can actually get used while unset.
+
+2005-05-19
+
+	* otr-plugin.h:
+	* otr-plugin.c (otrg_plugin_proto_supports_otr): New function to
+	check whether a given protocol supports OTR.  Right now,
+	everything except IRC is assumed to support it.
+
+	* otr-plugin.c (supply_extended_menu): Don't add the "OTR
+	Settings" menu option to the per-buddy menu if this buddy's
+	protocol doesn't support OTR.
+
+	* ui.c (otrg_ui_find_policy): If the protocol doesn't support
+	OTR, always return a policy of OTRL_POLICY_NEVER.
+
+2005-05-03
+
+	* README:
+	* packaging/fedora/gaim-otr.spec:
+	* packaging/windows/gaim-otr.nsi:
+	* configure.ac: Change version to 2.0.2
+
+	* packaging/debian: Remove this directory, as Thibaut VARENE
+	<varenet@debian.org> is now responsible for the debian packages.
+
+2005-03-23
+
+	* otr-plugin.c (process_receiving_im): If libotr tells us to
+	ignore this received message (because it's an internal protocol
+	message), it's not enough just to return 1 from this function,
+	since other plugins that catch receiving-im-msg may later return
+	0, and gaim only checks the return value from the last such
+	plugin.  So we additionally set the message to NULL.
+
+2005-03-21
+
+	* gtk-ui.c (otrg_gtk_ui_config_buddy):
+	* otr-plugin.c (supply_extended_menu): For consistency, use "OTR
+	Settings" instead of "OTR Options" everywhere.
+
+2005-03-08
+
+	* gtk-dialog.c (otrg_gtk_dialog_private_key_wait_start): Move a
+	variable declaration to the right place.
+
+2005-03-01
+
+	Initial autoconfiscation, thanks to Greg Troxel <gdt@ir.bbn.com>.

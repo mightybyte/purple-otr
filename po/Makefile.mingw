@@ -1,0 +1,41 @@
+# Makefile.mingw
+#
+# Description: Makefile to generate mo files
+#
+# based on Gaim's po/Makefile.mingw
+#
+
+# Name of the gettext domain
+GETTEXT_PACKAGE = pidgin-otr
+
+# msgfmt command
+GMSGFMT ?= /usr/bin/msgfmt
+
+.SUFFIXES:
+.SUFFIXES: .po .gmo
+
+##
+## SOURCES, OBJECTS
+##
+
+CATALOGS = $(patsubst %.po,%.gmo,$(wildcard *.po))
+
+##
+## RULES
+##
+
+.po.gmo:
+	rm -f $@ && $(GMSGFMT) --statistics -o $@ $<
+
+##
+## TARGETS
+##
+
+.PHONY: all install clean
+
+all: $(CATALOGS)
+
+clean:
+	rm -f *.gmo
+
+distclean: clean
