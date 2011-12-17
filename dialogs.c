@@ -139,9 +139,10 @@ void otrg_dialog_verify_fingerprint(Fingerprint *fprint)
 }
 
 /* Show a dialog asking the user to give an SMP secret. */
-void otrg_dialog_socialist_millionaires(ConnContext *context)
+void otrg_dialog_socialist_millionaires(ConnContext *context,
+    gboolean responder)
 {
-    ui_ops->socialist_millionaires(context, NULL, TRUE);
+    ui_ops->socialist_millionaires(context, NULL, responder);
 }
 
 /* Show a dialog asking the user to give an SMP secret, prompting with a
@@ -202,4 +203,10 @@ void otrg_dialog_new_conv(PurpleConversation *conv)
 void otrg_dialog_remove_conv(PurpleConversation *conv)
 {
     ui_ops->remove_conv(conv);
+}
+
+/* Invoke the per-conversation menu */
+void otrg_dialog_conv_menu(PurpleConversation *conv)
+{
+    ui_ops->conv_menu(conv);
 }

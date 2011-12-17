@@ -78,6 +78,8 @@ typedef struct {
     void (*new_conv)(PurpleConversation *conv);
 
     void (*remove_conv)(PurpleConversation *conv);
+
+    void (*conv_menu)(PurpleConversation *conv);
 } OtrgDialogUiOps;
 
 /* Set the UI ops */
@@ -138,7 +140,8 @@ void otrg_dialog_unknown_fingerprint(OtrlUserState us, const char *accountname,
 void otrg_dialog_verify_fingerprint(Fingerprint *fprint);
 
 /* Show a dialog asking the user to give an SMP secret. */
-void otrg_dialog_socialist_millionaires(ConnContext *context);
+void otrg_dialog_socialist_millionaires(ConnContext *context,
+    gboolean responder);
 
 /* Show a dialog asking the user to give an SMP secret, prompting with a
  * question. */
@@ -173,4 +176,6 @@ void otrg_dialog_new_conv(PurpleConversation *conv);
 /* Remove the per-conversation information display */
 void otrg_dialog_remove_conv(PurpleConversation *conv);
 
+/* Invoke the per-conversation menu */
+void otrg_dialog_conv_menu(PurpleConversation *conv);
 #endif

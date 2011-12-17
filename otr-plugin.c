@@ -32,12 +32,11 @@
 #include <gcrypt.h>
 
 /* purple headers */
-#include "pidgin.h"
-#include "notify.h"
-#include "version.h"
-#include "util.h"
-#include "debug.h"
-#include "core.h"
+#include <notify.h>
+#include <plugin.h>
+#include <version.h>
+#include <request.h>
+#include <core.h>
 
 #ifdef USING_GTK
 /* purple GTK headers */
@@ -71,9 +70,11 @@
 
 #ifdef USING_GTK
 /* purple-otr GTK headers */
-#include <glib.h>
 #include "gtk-ui.h"
 #include "gtk-dialog.h"
+#else
+#include "purple-ui.h"
+#include "purple-dialog.h"
 #endif
 
 /* If we're using glib on Windows, we need to use g_fopen to open files.
@@ -493,7 +494,7 @@ static gboolean process_receiving_im(PurpleAccount *account, char **who,
 		if (nextMsg != OTRL_SMP_EXPECT1)
 		    otrg_plugin_abort_smp(context);
 		else {
-		    otrg_dialog_socialist_millionaires(context);
+		    otrg_dialog_socialist_millionaires(context, TRUE);
 		}
 	    }
 	    tlv = otrl_tlv_find(tlvs, OTRL_TLV_SMP2);
@@ -551,12 +552,81 @@ static void process_conv_create(PurpleConversation *conv, void *data)
     if (conv) otrg_dialog_new_conv(conv);
 }
 
+static void otr_start_priv_cb(PurpleConversation *conv, gpointer user_data)
+{
+    const char *format;
+    char *buf;
+
+    if (purple_conversation_get_data(conv, "otr-private")) {
+    	format = _("Attempting to refresh the private conversation with %s...");
+    } else {
+    	format = _("Attempting to start a private conversation with %s...");
+    }
+    buf = g_strdup_printf(format, purple_conversation_get_name(conv));
+
+    purple_conversation_write(conv, NULL, buf, PURPLE_MESSAGE_SYSTEM, time(NULL));
+
+    g_free(buf);
+
+    otrg_plugin_send_default_query_conv(conv);
+}
+
+static void otr_stop_priv_cb(PurpleConversation *conv, gpointer user_data)
+{
+    ConnContext *context = otrg_plugin_conv_to_context(conv);
+
+    otrg_ui_disconnect_connection(context);
+}
+
+static void otr_auth_buddy_cb(PurpleConversation *conv, gpointer user_data)
+{
+    ConnContext *context = otrg_plugin_conv_to_context(conv);
+
+    if (context == NULL || context->msgstate != OTRL_MSGSTATE_ENCRYPTED)
+	return;
+
+    otrg_dialog_socialist_millionaires(context, FALSE);
+}
+
+static void process_conv_menu(PurpleConversation *conv, GList **list)
+{
+    PurpleMenuAction *act;
+    PurpleAccount *acct;
+    const char *proto;
+    GList *sub = NULL;
+
+    if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM)
+    	return;
+
+    /* Extract the account, and then the protocol, for this conversation */
+    acct = purple_conversation_get_account(conv);
+    if (acct == NULL) return;
+    proto = purple_account_get_protocol_id(acct);
+    if (!otrg_plugin_proto_supports_otr(proto)) return;
+
+    act = purple_menu_action_new(_("Start Privacy"),
+    	(PurpleCallback)otr_start_priv_cb, NULL, NULL);
+    sub = g_list_append(sub, act);
+
+    act = purple_menu_action_new(_("Stop Privacy"),
+    	(PurpleCallback)otr_stop_priv_cb, NULL, NULL);
+    sub = g_list_append(sub, act);
+
+    act = purple_menu_action_new(_("Authenticate Buddy"),
+    	(PurpleCallback)otr_auth_buddy_cb, NULL, NULL);
+    sub = g_list_append(sub, act);
+
+    act = purple_menu_action_new(_("OTR"),
+	NULL, NULL, sub);
+    *list = g_list_append(*list, act);
+}
+
 static void process_conv_updated(PurpleConversation *conv,
 	PurpleConvUpdateType type, void *data)
 {
     /* See if someone's trying to turn logging on for this conversation,
      * and we don't want them to. */
-    if (type == PURPLE_CONV_UPDATE_LOGGING) {
+    if (type == PURPLE_CONV_UPDATE_LOGGING && conv->logging == TRUE) {
 	ConnContext *context;
 	OtrgUiPrefs prefs;
 	PurpleAccount *account = purple_conversation_get_account(conv);
@@ -564,8 +634,7 @@ static void process_conv_updated(PurpleConversation *conv,
 
 	context = otrg_plugin_conv_to_context(conv);
 	if (context && prefs.avoid_logging_otr &&
-		context->msgstate == OTRL_MSGSTATE_ENCRYPTED &&
-		conv->logging == TRUE) {
+		context->msgstate == OTRL_MSGSTATE_ENCRYPTED) {
 	    purple_conversation_set_logging(conv, FALSE);
 	}
     }
@@ -580,8 +649,10 @@ static void process_connection_change(PurpleConnection *conn, void *data)
 
 static void otr_options_cb(PurpleBlistNode *node, gpointer user_data)
 {
-    /* We've already checked PURPLE_BLIST_NODE_IS_BUDDY(node) */
     PurpleBuddy *buddy = (PurpleBuddy *)node;
+    if (PURPLE_BLIST_NODE_IS_CONTACT(node))
+    	buddy = purple_contact_get_priority_buddy((PurpleContact*)node);
+    /* We've already checked PURPLE_BLIST_NODE_IS_BUDDY(node) */
 
     /* Modify the settings for this buddy */
     otrg_ui_config_buddy(buddy);
@@ -594,10 +665,12 @@ static void supply_extended_menu(PurpleBlistNode *node, GList **menu)
     PurpleAccount *acct;
     const char *proto;
 
-    if (!PURPLE_BLIST_NODE_IS_BUDDY(node)) return;
+    if (PURPLE_BLIST_NODE_IS_CONTACT(node))
+    	buddy = purple_contact_get_priority_buddy((PurpleContact*)node);
+	else if (!PURPLE_BLIST_NODE_IS_BUDDY(node)) return;
+	else buddy = (PurpleBuddy *)node;
 
     /* Extract the account, and then the protocol, for this buddy */
-    buddy = (PurpleBuddy *)node;
     acct = buddy->account;
     if (acct == NULL) return;
     proto = purple_account_get_protocol_id(acct);
@@ -851,6 +924,8 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_updated), NULL);
     purple_signal_connect(conv_handle, "conversation-created",
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_create), NULL);
+    purple_signal_connect(conv_handle, "conversation-extended-menu",
+	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_menu), NULL);
     purple_signal_connect(conn_handle, "signed-on", otrg_plugin_handle,
 	    PURPLE_CALLBACK(process_connection_change), NULL);
     purple_signal_connect(conn_handle, "signed-off", otrg_plugin_handle,
@@ -889,6 +964,8 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_updated));
     purple_signal_disconnect(conv_handle, "conversation-created",
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_create));
+    purple_signal_disconnect(conv_handle, "conversation-extended-menu",
+	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_menu));
     purple_signal_disconnect(conn_handle, "signed-on", otrg_plugin_handle,
 	    PURPLE_CALLBACK(process_connection_change));
     purple_signal_disconnect(conn_handle, "signed-off", otrg_plugin_handle,
@@ -902,6 +979,82 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
     otrg_ui_cleanup();
 
     return 1;
+}
+
+static void
+getkey_action_ok(void *dummy, PurpleRequestFields *fields)
+{
+    PurpleAccount *account = purple_request_fields_get_account(fields, "acct");
+    const char *accountname;
+    const char *protocol;
+    char *fingerprint, fingerprint_buf[45];;
+
+    accountname = purple_account_get_username(account);
+    protocol = purple_account_get_protocol_id(account);
+    fingerprint = otrl_privkey_fingerprint(otrg_plugin_userstate,
+    	fingerprint_buf, accountname, protocol);
+    if (!fingerprint) {
+    	/* generate it now */
+	otrg_plugin_create_privkey(accountname, protocol);
+	fingerprint = otrl_privkey_fingerprint(otrg_plugin_userstate,
+	    fingerprint_buf, accountname, protocol);
+    }
+    otrg_dialog_notify_info(accountname, protocol, NULL,
+    	_("Private Key"), fingerprint, NULL);
+}
+
+static gboolean
+proto_filter(PurpleAccount *account)
+{
+    const char *proto = purple_account_get_protocol_id(account);
+
+    return otrg_plugin_proto_supports_otr(proto);
+}
+
+static void
+getkey_action(PurplePluginAction *action)
+{
+    PurpleRequestFields *request;
+    PurpleRequestFieldGroup *group;
+    PurpleRequestField *field;
+
+    group = purple_request_field_group_new(NULL);
+
+    field = purple_request_field_account_new("acct", _("Account"), NULL);
+    purple_request_field_account_set_filter(field, proto_filter);
+    purple_request_field_account_set_show_all(field, TRUE);
+    purple_request_field_group_add_field(group, field);
+
+    request = purple_request_fields_new();
+    purple_request_fields_add_group(request, group);
+
+    purple_request_fields(action->plugin,
+    	N_("My Private Keys"),
+	NULL,
+	NULL,
+	request,
+	_("_Get Key"), G_CALLBACK(getkey_action_ok),
+	_("_Cancel"), NULL,
+	NULL, NULL, NULL, NULL);
+}
+
+static void
+fingerprint_action(PurplePluginAction *action)
+{
+}
+
+static GList *
+otrg_plugin_actions(PurplePlugin *plugin, gpointer Context)
+{
+    GList *actions = NULL;
+
+    actions = g_list_append(actions,
+    	purple_plugin_action_new(_("Get Private Key"),
+	    getkey_action));
+    actions = g_list_append(actions,
+    	purple_plugin_action_new(_("Manage Fingerprints"),
+	    fingerprint_action));
+    return actions;
 }
 
 /* Return 1 if the given protocol supports OTR, 0 otherwise. */
@@ -921,22 +1074,59 @@ static PidginPluginUiInfo ui_info =
 
 #define UI_INFO &ui_info
 #define PLUGIN_TYPE PIDGIN_PLUGIN_TYPE
+#define PREFS_INFO NULL
 
 #else
 
 #define UI_INFO NULL
-#define PLUGIN_TYPE ""
+#define PLUGIN_TYPE NULL
+#define PREFS_INFO &prefs_info
 
+static PurplePluginPrefFrame *
+get_plugin_pref_frame(PurplePlugin *plugin)
+{
+	PurplePluginPrefFrame *frame;
+	PurplePluginPref *pref;
+
+	frame = purple_plugin_pref_frame_new();
+
+	pref = purple_plugin_pref_new_with_name_and_label(PREF_ENABLED,
+	                _("Enable private messaging"));
+	purple_plugin_pref_frame_add(frame, pref);
+
+	pref = purple_plugin_pref_new_with_name_and_label(PREF_AUTO,
+	                _("Automatically initiate private messaging"));
+	purple_plugin_pref_frame_add(frame, pref);
+
+	pref = purple_plugin_pref_new_with_name_and_label(PREF_ONLYPRIV,
+					_("Require private messaging"));
+	purple_plugin_pref_frame_add(frame, pref);
+
+	pref = purple_plugin_pref_new_with_name_and_label(PREF_NOLOGOTR,
+					_("Don't log OTR conversations"));
+	purple_plugin_pref_frame_add(frame, pref);
+
+	return frame;
+}
+
+static PurplePluginUiInfo prefs_info = {
+    get_plugin_pref_frame,
+	0,
+	NULL,
+
+	/* padding */
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
 #endif
 
 static PurplePluginInfo info =
 {
 	PURPLE_PLUGIN_MAGIC,
-
-        /* Use the 2.0.x API */
-        2,                                                /* major version  */
-	0,                                                /* minor version  */
-
+	PURPLE_MAJOR_VERSION,                             /* major version  */
+	PURPLE_MINOR_VERSION,                             /* minor version  */
 	PURPLE_PLUGIN_STANDARD,                           /* type           */
 	PLUGIN_TYPE,                                      /* ui_requirement */
 	0,                                                /* flags          */
@@ -950,7 +1140,8 @@ static PurplePluginInfo info =
 	                                                  /* author         */
 	"Ian Goldberg, Rob Smits,\n"
 	    "\t\t\tChris Alexander, Nikita Borisov\n"
-	    "\t\t\t<otr@cypherpunks.ca>",
+	    "\t\t\t<otr@cypherpunks.ca>,\n"
+	"Howard Chu <hyc@symas.com>",
 	"http://otr.cypherpunks.ca/",                     /* homepage       */
 
 	otr_plugin_load,                                  /* load           */
@@ -959,8 +1150,8 @@ static PurplePluginInfo info =
 
 	UI_INFO,                                          /* ui_info        */
 	NULL,                                             /* extra_info     */
-	NULL,                                             /* prefs_info     */
-	NULL                                              /* actions        */
+	PREFS_INFO,                                       /* prefs_info     */
+	otrg_plugin_actions                               /* actions        */
 };
 
 static void
@@ -970,6 +1161,9 @@ __init_plugin(PurplePlugin *plugin)
 #ifdef USING_GTK
     otrg_ui_set_ui_ops(otrg_gtk_ui_get_ui_ops());
     otrg_dialog_set_ui_ops(otrg_gtk_dialog_get_ui_ops());
+#else
+    otrg_ui_set_ui_ops(otrg_purple_ui_get_ui_ops());
+    otrg_dialog_set_ui_ops(otrg_purple_dialog_get_ui_ops());
 #endif
 
     /* Initialize the OTR library */
@@ -985,6 +1179,13 @@ __init_plugin(PurplePlugin *plugin)
     info.description = _("Preserves the privacy of IM communications "
                          "by providing encryption, authentication, "
 			 "deniability, and perfect forward secrecy.");
+
+    /* Set default preferences */
+    purple_prefs_add_none(PREF_BASE);
+    purple_prefs_add_bool(PREF_ENABLED, TRUE);
+    purple_prefs_add_bool(PREF_AUTO, TRUE);
+    purple_prefs_add_bool(PREF_ONLYPRIV, FALSE);
+    purple_prefs_add_bool(PREF_NOLOGOTR, FALSE);
 }
 
 PURPLE_INIT_PLUGIN(otr, __init_plugin, info)

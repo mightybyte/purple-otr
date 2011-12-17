@@ -33,6 +33,17 @@
 #define STOREFNAME "otr.fingerprints"
 #define MAXMSGSIZEFNAME "otr.max_message_size"
 
+#define _PREF_ENABLED	"OTR/enabled"
+#define _PREF_AUTO	"OTR/automatic"
+#define _PREF_ONLYPRIV	"OTR/onlyprivate"
+#define _PREF_NOLOGOTR	"OTR/avoidloggingotr"
+
+#define PREF_BASE	"/OTR"
+#define PREF_ENABLED	"/" _PREF_ENABLED
+#define PREF_AUTO	"/" _PREF_AUTO
+#define PREF_ONLYPRIV	"/" _PREF_ONLYPRIV
+#define PREF_NOLOGOTR	"/" _PREF_NOLOGOTR
+
 extern PurplePlugin *otrg_plugin_handle;
 
 extern OtrlUserState otrg_plugin_userstate;
