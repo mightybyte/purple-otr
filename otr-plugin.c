@@ -100,6 +100,13 @@ OtrlUserState otrg_plugin_userstate = NULL;
  * protocols. */
 GHashTable* mms_table;
 
+static const char *trust_states[] = {
+    N_("Not Private"),
+    N_("Unverified"),
+    N_("Private"),
+    N_("Finished")
+};
+
 /* Send an IM from the given account to the given recipient.  Display an
  * error dialog if that account isn't currently logged in. */
 void otrg_plugin_inject_message(PurpleAccount *account, const char *recipient,
@@ -556,8 +563,10 @@ static void otr_start_priv_cb(PurpleConversation *conv, gpointer user_data)
 {
     const char *format;
     char *buf;
+    TrustLevel level;
 
-    if (purple_conversation_get_data(conv, "otr-private")) {
+    level = GPOINTER_TO_INT(purple_conversation_get_data(conv, "otr-level"));
+    if (level == TRUST_UNVERIFIED || level == TRUST_PRIVATE) {
     	format = _("Attempting to refresh the private conversation with %s...");
     } else {
     	format = _("Attempting to start a private conversation with %s...");
@@ -578,7 +587,7 @@ static void otr_stop_priv_cb(PurpleConversation *conv, gpointer user_data)
     otrg_ui_disconnect_connection(context);
 }
 
-static void otr_auth_buddy_cb(PurpleConversation *conv, gpointer user_data)
+static void otr_auth_smp(PurpleConversation *conv, gpointer user_data)
 {
     ConnContext *context = otrg_plugin_conv_to_context(conv);
 
@@ -588,15 +597,27 @@ static void otr_auth_buddy_cb(PurpleConversation *conv, gpointer user_data)
     otrg_dialog_socialist_millionaires(context, FALSE);
 }
 
+static void otr_auth_shared(PurpleConversation *conv, gpointer user_data)
+{
+}
+
+static void otr_auth_finger(PurpleConversation *conv, gpointer user_data)
+{
+}
+
 static void process_conv_menu(PurpleConversation *conv, GList **list)
 {
     PurpleMenuAction *act;
     PurpleAccount *acct;
     const char *proto;
+    char *title;
     GList *sub = NULL;
+    TrustLevel level;
 
     if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM)
     	return;
+
+    level = GPOINTER_TO_INT(purple_conversation_get_data(conv, "otr-level"));
 
     /* Extract the account, and then the protocol, for this conversation */
     acct = purple_conversation_get_account(conv);
@@ -604,20 +625,44 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
     proto = purple_account_get_protocol_id(acct);
     if (!otrg_plugin_proto_supports_otr(proto)) return;
 
-    act = purple_menu_action_new(_("Start Privacy"),
-    	(PurpleCallback)otr_start_priv_cb, NULL, NULL);
-    sub = g_list_append(sub, act);
+    if (level == TRUST_UNVERIFIED || level == TRUST_PRIVATE) {
+	GList *sub2 = NULL;
+	act = purple_menu_action_new(_("Refresh Privacy"),
+	    (PurpleCallback)otr_start_priv_cb, NULL, NULL);
+	sub = g_list_append(sub, act);
 
-    act = purple_menu_action_new(_("Stop Privacy"),
-    	(PurpleCallback)otr_stop_priv_cb, NULL, NULL);
-    sub = g_list_append(sub, act);
+	act = purple_menu_action_new(_("Stop Privacy"),
+	    (PurpleCallback)otr_stop_priv_cb, NULL, NULL);
+	sub = g_list_append(sub, act);
 
-    act = purple_menu_action_new(_("Authenticate Buddy"),
-    	(PurpleCallback)otr_auth_buddy_cb, NULL, NULL);
-    sub = g_list_append(sub, act);
+	act = purple_menu_action_new(_("Secret Question"),
+	    (PurpleCallback)otr_auth_smp, NULL, NULL);
+	sub2 = g_list_append(sub2, act);
 
-    act = purple_menu_action_new(_("OTR"),
-	NULL, NULL, sub);
+	act = purple_menu_action_new(_("Shared Secret"),
+	    (PurpleCallback)otr_auth_shared, NULL, NULL);
+	sub2 = g_list_append(sub2, act);
+
+	act = purple_menu_action_new(_("Fingerprint"),
+	    (PurpleCallback)otr_auth_finger, NULL, NULL);
+	sub2 = g_list_append(sub2, act);
+
+	act = purple_menu_action_new(level == TRUST_UNVERIFIED
+	    ? _("Authenticate Buddy") : _("Re-Authenticate Buddy"),
+	    NULL, NULL, sub2);
+
+	sub = g_list_append(sub, act);
+    } else {
+	act = purple_menu_action_new(_("Start Privacy"),
+	    (PurpleCallback)otr_start_priv_cb, NULL, NULL);
+	sub = g_list_append(sub, act);
+    }
+
+    title = g_strdup_printf("OTR (%s)", trust_states[level]);
+
+    act = purple_menu_action_new(title, NULL, NULL, sub);
+    g_free(title);
+
     *list = g_list_append(*list, act);
 }
 

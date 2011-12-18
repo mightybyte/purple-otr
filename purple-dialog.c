@@ -1068,6 +1068,7 @@ static void destroy_menuitem(GtkWidget *widget, gpointer data)
 static void dialog_update_label_conv(PurpleConversation *conv, TrustLevel level)
 {
     purple_conversation_set_data(conv, "otr-level", GINT_TO_POINTER(level));
+    purple_conversation_update(conv, PURPLE_CONV_UPDATE_FEATURES);
 }
 
 static void dialog_update_label(PurpleConversation *conv, ConnContext *context)
