@@ -53,7 +53,52 @@ static void otrg_purple_ui_update_fingerprint(void)
 /* Update the keylist, if it's visible */
 static void otrg_purple_ui_update_keylist(void)
 {
-    /* Nothing to do */
+    PurpleNotifySearchResults *res;
+    ConnContext *context;
+    Fingerprint *fingerprint;
+    char hash[45], *item;
+    GList *row;
+    if (!otrg_keylist_info)
+	return;
+
+    res = otrg_keylist_info;
+
+    for (context = otrg_plugin_userstate->context_root; context != NULL;
+	    context = context->next) {
+	int i;
+	PurplePlugin *p;
+	char *proto_name;
+	fingerprint = context->fingerprint_root.next;
+	/* If there's no fingerprint, don't add it to the known
+	 * fingerprints list */
+	while(fingerprint) {
+		item = g_strdup(context->username);
+	    row = g_list_append(NULL, item);
+	    if (context->msgstate == OTRL_MSGSTATE_ENCRYPTED &&
+		    context->active_fingerprint != fingerprint) {
+		item = _("Unused");
+	    } else {
+		item = (gchar *)
+		    _(otrg_trust_states[otrg_plugin_context_to_trust(context)]);
+	    }
+	    row = g_list_append(row, item);
+	    item = (fingerprint->trust && fingerprint->trust[0]) ?
+		_("Yes") : _("No");
+	    row = g_list_append(row, item);
+	    otrl_privkey_hash_to_human(hash, fingerprint->fingerprint);
+	    item = g_strdup(hash);
+	    row = g_list_append(row, item);
+	    p = purple_find_prpl(context->protocol);
+	    proto_name = (p && p->info->name) ? p->info->name : _("Unknown");
+	    item = g_strdup_printf("%s (%s)", context->accountname,
+		proto_name);
+	    row = g_list_append(row, item);
+	    purple_notify_searchresults_row_add(res, row);
+	    fingerprint = fingerprint->next;
+	}
+    }
+    if (otrg_keylist_handle)
+	purple_notify_searchresults_new_rows(NULL, res, otrg_keylist_handle);
 }
 
 /* Load the global OTR prefs */

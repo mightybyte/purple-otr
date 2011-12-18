@@ -46,6 +46,11 @@
 
 extern PurplePlugin *otrg_plugin_handle;
 
+extern void *otrg_keylist_info;
+extern void *otrg_keylist_handle;
+
+extern const char *otrg_trust_states[];
+
 extern OtrlUserState otrg_plugin_userstate;
 
 /* Send an IM from the given account to the given recipient.  Display an

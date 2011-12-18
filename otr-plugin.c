@@ -92,6 +92,8 @@
 #endif
 
 PurplePlugin *otrg_plugin_handle;
+void *otrg_keylist_info;
+void *otrg_keylist_handle;
 
 /* We'll only use the one OtrlUserState. */
 OtrlUserState otrg_plugin_userstate = NULL;
@@ -100,7 +102,7 @@ OtrlUserState otrg_plugin_userstate = NULL;
  * protocols. */
 GHashTable* mms_table;
 
-static const char *trust_states[] = {
+const char *otrg_trust_states[] = {
     N_("Not Private"),
     N_("Unverified"),
     N_("Private"),
@@ -636,7 +638,7 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
 	sub = g_list_append(sub, act);
     }
 
-    title = g_strdup_printf("OTR (%s)", trust_states[level]);
+    title = g_strdup_printf("OTR (%s)", otrg_trust_states[level]);
 
     act = purple_menu_action_new(title, NULL, NULL, sub);
     g_free(title);
@@ -1061,9 +1063,91 @@ getkey_action(PurplePluginAction *action)
 	NULL, NULL, NULL, NULL);
 }
 
+static ConnContext *row_to_context(GList *r)
+{
+    ConnContext *context;
+	char *username, *accountname, *proto, *end;
+	username = r->data;
+	r = g_list_last(r);
+	accountname = g_strdup(r->data);
+	proto = strchr(accountname, ' ');
+	*proto = '\0';
+	proto += 2;
+	end = strchr(proto, ')');
+	*end = '\0';
+	for (r = purple_plugins_get_protocols(); r; r=r->next) {
+		PurplePlugin *p = (PurplePlugin *)r->data;
+		if (purple_strequal(p->info->name, proto)) {
+			proto = p->info->id;
+			break;
+		}
+	}
+    context = otrl_context_find(otrg_plugin_userstate, username, accountname,
+	    proto, 0, NULL, NULL, NULL);
+	g_free(accountname);
+	return context;
+}
+
+static void
+fprint_verify_cb(PurpleConnection *c, GList *row, gpointer data)
+{
+	ConnContext *context = row_to_context(row);
+	otrg_dialog_verify_fingerprint(context->active_fingerprint);
+}
+
+static void
+fprint_forget_cb(PurpleConnection *c, GList *row, gpointer data)
+{
+	ConnContext *context = row_to_context(row);
+	otrg_ui_forget_fingerprint(context->active_fingerprint);
+}
+
+static void
+fprint_close_cb(void *data)
+{
+    PurpleNotifySearchResults *results;
+	GList *i, *j;
+	results = otrg_keylist_info;
+    otrg_keylist_info = NULL;
+    otrg_keylist_handle = NULL;
+	for (i=results->rows; i; i=i->next) {
+		j = i->data;
+		g_free(j->data);
+		j = g_list_nth(j, 3);
+		g_free(j->data);
+		g_free(j->next->data);
+	}
+}
+
 static void
 fingerprint_action(PurplePluginAction *action)
 {
+    PurpleNotifySearchResults *results;
+    PurpleNotifySearchColumn *col;
+    GList *row;
+    char *titles[5];
+    int i;
+
+    titles[0] = _("Screenname");
+	titles[1] = _("Status");
+	titles[2] = _("Verified");
+	titles[3] = _("Fingerprint");
+	titles[4] = _("Account");
+
+    results = purple_notify_searchresults_new();
+    for (i=0; i<5; i++) {
+	col = purple_notify_searchresults_column_new(titles[i]);
+	purple_notify_searchresults_column_add(results, col);
+    }
+    purple_notify_searchresults_button_add_labeled(results,
+	_("Verify fingerprint"), fprint_verify_cb);
+    purple_notify_searchresults_button_add_labeled(results,
+	_("Forget fingerprint"), fprint_forget_cb);
+    otrg_keylist_info = results;
+    otrg_ui_update_keylist();
+    otrg_keylist_handle = purple_notify_searchresults(NULL,
+	_("Known Fingerprints"), NULL, NULL, results,
+	fprint_close_cb, NULL);
 }
 
 static GList *
