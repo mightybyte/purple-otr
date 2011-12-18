@@ -587,7 +587,7 @@ static void otr_stop_priv_cb(PurpleConversation *conv, gpointer user_data)
     otrg_ui_disconnect_connection(context);
 }
 
-static void otr_auth_smp(PurpleConversation *conv, gpointer user_data)
+static void otr_auth_cb(PurpleConversation *conv, gpointer user_data)
 {
     ConnContext *context = otrg_plugin_conv_to_context(conv);
 
@@ -595,14 +595,6 @@ static void otr_auth_smp(PurpleConversation *conv, gpointer user_data)
 	return;
 
     otrg_dialog_socialist_millionaires(context, FALSE);
-}
-
-static void otr_auth_shared(PurpleConversation *conv, gpointer user_data)
-{
-}
-
-static void otr_auth_finger(PurpleConversation *conv, gpointer user_data)
-{
 }
 
 static void process_conv_menu(PurpleConversation *conv, GList **list)
@@ -626,7 +618,6 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
     if (!otrg_plugin_proto_supports_otr(proto)) return;
 
     if (level == TRUST_UNVERIFIED || level == TRUST_PRIVATE) {
-	GList *sub2 = NULL;
 	act = purple_menu_action_new(_("Refresh Privacy"),
 	    (PurpleCallback)otr_start_priv_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
@@ -635,22 +626,9 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
 	    (PurpleCallback)otr_stop_priv_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
 
-	act = purple_menu_action_new(_("Secret Question"),
-	    (PurpleCallback)otr_auth_smp, NULL, NULL);
-	sub2 = g_list_append(sub2, act);
-
-	act = purple_menu_action_new(_("Shared Secret"),
-	    (PurpleCallback)otr_auth_shared, NULL, NULL);
-	sub2 = g_list_append(sub2, act);
-
-	act = purple_menu_action_new(_("Fingerprint"),
-	    (PurpleCallback)otr_auth_finger, NULL, NULL);
-	sub2 = g_list_append(sub2, act);
-
 	act = purple_menu_action_new(level == TRUST_UNVERIFIED
 	    ? _("Authenticate Buddy") : _("Re-Authenticate Buddy"),
-	    NULL, NULL, sub2);
-
+	    (PurpleCallback)otr_auth_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
     } else {
 	act = purple_menu_action_new(_("Start Privacy"),
