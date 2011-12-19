@@ -1063,10 +1063,12 @@ getkey_action(PurplePluginAction *action)
 	NULL, NULL, NULL, NULL);
 }
 
-static ConnContext *row_to_context(GList *r)
+static Fingerprint *row_to_fprint(GList *r)
 {
     ConnContext *context;
 	char *username, *accountname, *proto, *end;
+	char *print, hash[45];
+	Fingerprint *f;
 	username = r->data;
 	r = g_list_last(r);
 	accountname = g_strdup(r->data);
@@ -1075,6 +1077,8 @@ static ConnContext *row_to_context(GList *r)
 	proto += 2;
 	end = strchr(proto, ')');
 	*end = '\0';
+	r = r->prev;
+	print = r->data;
 	for (r = purple_plugins_get_protocols(); r; r=r->next) {
 		PurplePlugin *p = (PurplePlugin *)r->data;
 		if (purple_strequal(p->info->name, proto)) {
@@ -1085,21 +1089,26 @@ static ConnContext *row_to_context(GList *r)
     context = otrl_context_find(otrg_plugin_userstate, username, accountname,
 	    proto, 0, NULL, NULL, NULL);
 	g_free(accountname);
-	return context;
+	if (!context)
+		return NULL;
+	for (f = context->fingerprint_root.next; f; f=f->next) {
+		otrl_privkey_hash_to_human(hash, f->fingerprint);
+		if (purple_strequal(hash, print))
+			break;
+	}
+	return f;
 }
 
 static void
 fprint_verify_cb(PurpleConnection *c, GList *row, gpointer data)
 {
-	ConnContext *context = row_to_context(row);
-	otrg_dialog_verify_fingerprint(context->active_fingerprint);
+	otrg_dialog_verify_fingerprint(row_to_fprint(row));
 }
 
 static void
 fprint_forget_cb(PurpleConnection *c, GList *row, gpointer data)
 {
-	ConnContext *context = row_to_context(row);
-	otrg_ui_forget_fingerprint(context->active_fingerprint);
+	otrg_ui_forget_fingerprint(row_to_fprint(row));
 }
 
 static void
@@ -1145,7 +1154,8 @@ fingerprint_action(PurplePluginAction *action)
 	_("Forget fingerprint"), fprint_forget_cb);
     otrg_keylist_info = results;
     otrg_ui_update_keylist();
-    otrg_keylist_handle = purple_notify_searchresults(NULL,
+    otrg_keylist_handle = purple_notify_searchresults(
+	purple_connections_get_all()->data,
 	_("Known Fingerprints"), NULL, NULL, results,
 	fprint_close_cb, NULL);
 }
