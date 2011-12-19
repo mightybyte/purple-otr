@@ -176,19 +176,18 @@ static void smp_qanda(ConnContext *context, char *question)
 
     if (question) {
         secondary =
-	    _("Your buddy is attempting to determine if he or she is really "
-		"talking to you, or if it's someone pretending to be you.  "
-		"Your buddy has asked a question, indicated below.  "
-		"To authenticate to your buddy, enter the answer and "
-		"click OK.");
+	    _("Your buddy is attempting to determine if he or she is really\n"
+		"talking to you, or if it's someone pretending to be you.\n"
+		"Your buddy has asked a question, indicated below.\n"
+		"To authenticate to your buddy, enter the answer and click OK.");
 	qlabel = _("This is the question asked by your buddy:");
     } else {
         secondary =
-	    _("To authenticate using a question, pick a question whose "
-	    "answer is known only to you and your buddy.  Enter this "
-	    "question and this answer, then wait for your buddy to "
-	    "enter the answer too.  If the answers "
-	    "don't match, then you may be talking to an imposter.");
+	    _("To authenticate using a question, pick a question whose\n"
+	    "answer is known only to you and your buddy.  Enter this\n"
+	    "question and this answer, then wait for your buddy to\n"
+	    "enter the answer too.  If the answers don't match, then\n "
+	    "you may be talking to an imposter.");
         qlabel = _("Enter question here:");
     }
 
@@ -286,10 +285,10 @@ static void smp_shared(ConnContext *context, gboolean responder)
     conv = otrg_plugin_context_to_conv(context, 0);
     purple_request_fields(otrg_plugin_handle,
 	_("Authenticate Buddy"), primary,
-        _("To authenticate, pick a secret known "
-            "only to you and your buddy.  Enter this secret, then "
-            "wait for your buddy to enter it too.  If the secrets "
-            "don't match, then you may be talking to an imposter."),
+        _("To authenticate, pick a secret known only to you and\n"
+			"your buddy.  Enter this secret, then wait for your buddy\n"
+			"to enter it too.  If the secrets don't match, then\n"
+			"you may be talking to an imposter."),
 	request,
 	_("Authenticate"), G_CALLBACK(smp_shared_cb),
 	_("Cancel"), NULL,
@@ -600,13 +599,12 @@ static void otrg_purple_dialog_verify_fingerprint(Fingerprint *fprint)
 
     p = purple_find_prpl(context->protocol);
     proto_name = (p && p->info->name) ? p->info->name : _("Unknown");
-    secondary = g_strdup_printf(_("%s %s\n\n"
+    secondary = g_strdup_printf(_("%s\n%s\n\n"
 		"Fingerprint for you, %s (%s):\n%s\n\n"
 		"Purported fingerprint for %s:\n%s\n"),
-	    _("To verify the fingerprint, contact your buddy via some "
-	    "*OTHER* authenticated channel, such as the telephone "
-	    "or GPG-signed email.  Each of you should tell your fingerprint "
-	    "to the other."),
+	    _("To verify the fingerprint, contact your buddy via some *OTHER*\n"
+		"authenticated channel, such as the telephone or GPG-signed email.\n"
+		"Each of you should tell your fingerprint to the other."),
 	    _("If everything matches up, you should check the checkbox below."),
 	    context->accountname, proto_name, our_hash,
 	    context->username, their_hash);
@@ -614,7 +612,7 @@ static void otrg_purple_dialog_verify_fingerprint(Fingerprint *fprint)
     account = purple_accounts_find(context->accountname, context->protocol);
 
     group = purple_request_field_group_new(NULL);
-    label = g_strdup_printf(_("I have verified that this is in fact the "
+    label = g_strdup_printf(_("I have verified that this is in fact the\n"
 	"correct fingerprint for %s."), context->username);
     oldtrust = (fprint->trust && fprint->trust[0]);
     field = purple_request_field_bool_new("checked", label, oldtrust);
@@ -678,8 +676,8 @@ static void otrg_purple_dialog_socialist_millionaires(ConnContext *context,
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	purple_request_choice(otrg_plugin_handle,
 	    _("Authenticate Buddy"), primary,
-	    _("Authenticating a buddy helps ensure that the person "
-	    "you are talking to is who he or she claims to be."
+	    _("Authenticating a buddy helps ensure that the person you\n"
+	    "are talking to is who he or she claims to be."
 	    "\n\n"
 	    "How would you like to authenticate your buddy?"),
 	    0,
@@ -742,9 +740,10 @@ static void otrg_purple_dialog_update_smp(ConnContext *context,
 	    if (context->active_fingerprint->trust &&
 		    context->active_fingerprint->trust[0]) {
 		secondary = _("Authentication successful.");
+		dialog_update_label(conv, context);
 	    } else {
-		secondary = _("Your buddy has successfully authenticated you.  "
-			    "You may want to authenticate your buddy as "
+		secondary = _("Your buddy has successfully authenticated you.\n"
+			    "You may want to authenticate your buddy as\n"
 			    "well by asking your own question.");
 	    }
         } else {
