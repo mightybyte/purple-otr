@@ -48,6 +48,7 @@ extern PurplePlugin *otrg_plugin_handle;
 
 extern void *otrg_keylist_info;
 extern void *otrg_keylist_handle;
+extern GList *otrg_keylist_strings;
 
 extern const char *otrg_trust_states[];
 

@@ -94,6 +94,7 @@
 PurplePlugin *otrg_plugin_handle;
 void *otrg_keylist_info;
 void *otrg_keylist_handle;
+GList *otrg_keylist_strings;
 
 /* We'll only use the one OtrlUserState. */
 OtrlUserState otrg_plugin_userstate = NULL;
@@ -1066,66 +1067,63 @@ getkey_action(PurplePluginAction *action)
 static Fingerprint *row_to_fprint(GList *r)
 {
     ConnContext *context;
-	char *username, *accountname, *proto, *end;
-	char *print, hash[45];
-	Fingerprint *f;
-	username = r->data;
-	r = g_list_last(r);
-	accountname = g_strdup(r->data);
-	proto = strchr(accountname, ' ');
-	*proto = '\0';
-	proto += 2;
-	end = strchr(proto, ')');
-	*end = '\0';
-	r = r->prev;
-	print = r->data;
-	for (r = purple_plugins_get_protocols(); r; r=r->next) {
-		PurplePlugin *p = (PurplePlugin *)r->data;
-		if (purple_strequal(p->info->name, proto)) {
-			proto = p->info->id;
-			break;
-		}
+    char *username, *accountname, *proto, *end;
+    char *print, hash[45];
+    Fingerprint *f;
+
+    if (!r) return NULL;
+
+    username = r->data;
+    r = g_list_last(r);
+    accountname = g_strdup(r->data);
+    proto = strchr(accountname, ' ');
+    *proto = '\0';
+    proto += 2;
+    end = strchr(proto, ')');
+    *end = '\0';
+    r = r->prev;
+    print = r->data;
+    for (r = purple_plugins_get_protocols(); r; r=r->next) {
+	PurplePlugin *p = (PurplePlugin *)r->data;
+	if (purple_strequal(p->info->name, proto)) {
+	    proto = p->info->id;
+	    break;
 	}
+    }
+
     context = otrl_context_find(otrg_plugin_userstate, username, accountname,
 	    proto, 0, NULL, NULL, NULL);
-	g_free(accountname);
-	if (!context)
-		return NULL;
-	for (f = context->fingerprint_root.next; f; f=f->next) {
-		otrl_privkey_hash_to_human(hash, f->fingerprint);
-		if (purple_strequal(hash, print))
-			break;
-	}
-	return f;
+    g_free(accountname);
+    if (!context)
+	return NULL;
+    for (f = context->fingerprint_root.next; f; f=f->next) {
+	otrl_privkey_hash_to_human(hash, f->fingerprint);
+	if (purple_strequal(hash, print))
+	    break;
+    }
+    return f;
 }
 
 static void
 fprint_verify_cb(PurpleConnection *c, GList *row, gpointer data)
 {
-	otrg_dialog_verify_fingerprint(row_to_fprint(row));
+    otrg_dialog_verify_fingerprint(row_to_fprint(row));
 }
 
 static void
 fprint_forget_cb(PurpleConnection *c, GList *row, gpointer data)
 {
-	otrg_ui_forget_fingerprint(row_to_fprint(row));
+    otrg_ui_forget_fingerprint(row_to_fprint(row));
 }
 
 static void
 fprint_close_cb(void *data)
 {
-    PurpleNotifySearchResults *results;
-	GList *i, *j;
-	results = otrg_keylist_info;
+    g_list_foreach(otrg_keylist_strings, (GFunc)g_free, NULL);
+    g_list_free(otrg_keylist_strings);
+    otrg_keylist_strings = NULL;
     otrg_keylist_info = NULL;
     otrg_keylist_handle = NULL;
-	for (i=results->rows; i; i=i->next) {
-		j = i->data;
-		g_free(j->data);
-		j = g_list_nth(j, 3);
-		g_free(j->data);
-		g_free(j->next->data);
-	}
 }
 
 static void
@@ -1133,15 +1131,17 @@ fingerprint_action(PurplePluginAction *action)
 {
     PurpleNotifySearchResults *results;
     PurpleNotifySearchColumn *col;
+    PurpleConnection *c = NULL;
+    GList *conns;
     GList *row;
     char *titles[5];
     int i;
 
     titles[0] = _("Screenname");
-	titles[1] = _("Status");
-	titles[2] = _("Verified");
-	titles[3] = _("Fingerprint");
-	titles[4] = _("Account");
+    titles[1] = _("Status");
+    titles[2] = _("Verified");
+    titles[3] = _("Fingerprint");
+    titles[4] = _("Account");
 
     results = purple_notify_searchresults_new();
     for (i=0; i<5; i++) {
@@ -1154,8 +1154,10 @@ fingerprint_action(PurplePluginAction *action)
 	_("Forget fingerprint"), fprint_forget_cb);
     otrg_keylist_info = results;
     otrg_ui_update_keylist();
-    otrg_keylist_handle = purple_notify_searchresults(
-	purple_connections_get_all()->data,
+    conns = purple_connections_get_all();
+    if (conns)
+	c = conns->data;
+    otrg_keylist_handle = purple_notify_searchresults(c,
 	_("Known Fingerprints"), NULL, NULL, results,
 	fprint_close_cb, NULL);
 }
