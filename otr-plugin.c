@@ -620,7 +620,9 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
     proto = purple_account_get_protocol_id(acct);
     if (!otrg_plugin_proto_supports_otr(proto)) return;
 
-    if (level == TRUST_UNVERIFIED || level == TRUST_PRIVATE) {
+    switch(level) {
+    case TRUST_UNVERIFIED:
+    case TRUST_PRIVATE:
 	act = purple_menu_action_new(_("Refresh Privacy"),
 	    (PurpleCallback)otr_start_priv_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
@@ -633,10 +635,17 @@ static void process_conv_menu(PurpleConversation *conv, GList **list)
 	    ? _("Authenticate Buddy") : _("Re-Authenticate Buddy"),
 	    (PurpleCallback)otr_auth_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
-    } else {
+	break;
+    case TRUST_FINISHED:
+	act = purple_menu_action_new(_("Stop Privacy"),
+	    (PurpleCallback)otr_stop_priv_cb, NULL, NULL);
+	sub = g_list_append(sub, act);
+    	break;
+    default:
 	act = purple_menu_action_new(_("Start Privacy"),
 	    (PurpleCallback)otr_start_priv_cb, NULL, NULL);
 	sub = g_list_append(sub, act);
+	break;
     }
 
     title = g_strdup_printf("OTR (%s)", otrg_trust_states[level]);
