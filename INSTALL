@@ -21,6 +21,11 @@ properly. You can get these patches here:
 	http://developer.pidgin.im/ticket/14821
 	http://developer.pidgin.im/ticket/14822
 
+If you were already using the pidgin-otr 3.2.0 plugin with pidgin,
+you'll need to remove it from your ~/.purple/prefs.xml file before
+installing this plugin. (You should not have both enabled at the
+same time!)
+
 COMPILING (non-Win32)
 
 If you're got a CVS copy, you will need to regenerate the configure
