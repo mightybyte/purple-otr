@@ -1,3 +1,11 @@
+2011-12-19
+	* purple-dialog.[ch]: New code to use libpurple instead of pidgin/GTK
+	* purple-ui.[ch]: ditto
+
+	* README: Updated, rewritten for purple-otr 3.2.1.
+
+	* Release 3.2.1.
+
 2008-06-15
 
 	* gtk-dialog.c: Don't try to destroy the submenu when we've
