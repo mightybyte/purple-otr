@@ -385,6 +385,7 @@ static int otrg_purple_dialog_display_otr_message(const char *accountname,
     /* See if there's a conversation window we can put this in. */
     PurpleAccount *account;
     PurpleConversation *conv;
+    int level = PURPLE_MESSAGE_SYSTEM;
 
     account = purple_accounts_find(accountname, protocol);
     if (!account) return -1;
@@ -392,7 +393,10 @@ static int otrg_purple_dialog_display_otr_message(const char *accountname,
     conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, username, account);
     if (!conv) return -1;
 
-    purple_conversation_write(conv, NULL, msg, PURPLE_MESSAGE_SYSTEM, time(NULL));
+    if (!strncmp(msg, "<b>The following message",
+	sizeof("<b>The following message")-1))
+	level = PURPLE_MESSAGE_RECV;
+    purple_conversation_write(conv, NULL, msg, level, time(NULL));
 
     return 0;
 }
