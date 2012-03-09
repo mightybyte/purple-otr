@@ -62,9 +62,6 @@ static void otrg_purple_ui_update_keylist(void)
 	return;
 
     res = otrg_keylist_info;
-    g_list_foreach(otrg_keylist_strings, (GFunc)g_free, NULL);
-    g_list_free(otrg_keylist_strings);
-    otrg_keylist_strings = NULL;
 
     g_list_foreach(res->rows, (GFunc)g_list_free, NULL);
     res->rows = NULL;
@@ -77,7 +74,8 @@ static void otrg_purple_ui_update_keylist(void)
 	/* If there's no fingerprint, don't add it to the known
 	 * fingerprints list */
 	while(fingerprint) {
-	    row = g_list_append(NULL, context->username);
+	    item = g_strdup(context->username);
+	    row = g_list_append(NULL, item);
 	    if (context->msgstate == OTRL_MSGSTATE_ENCRYPTED &&
 		    context->active_fingerprint != fingerprint) {
 		item = _("Unused");
@@ -85,20 +83,20 @@ static void otrg_purple_ui_update_keylist(void)
 		item = (gchar *)
 		    _(otrg_trust_states[otrg_plugin_context_to_trust(context)]);
 	    }
+	    item = g_strdup(item);
 	    row = g_list_append(row, item);
 	    item = (fingerprint->trust && fingerprint->trust[0]) ?
 		_("Yes") : _("No");
+	    item = g_strdup(item);
 	    row = g_list_append(row, item);
 	    otrl_privkey_hash_to_human(hash, fingerprint->fingerprint);
 	    item = g_strdup(hash);
 	    row = g_list_append(row, item);
-	    otrg_keylist_strings = g_list_append(otrg_keylist_strings, item);
 	    p = purple_find_prpl(context->protocol);
 	    proto_name = (p && p->info->name) ? p->info->name : _("Unknown");
 	    item = g_strdup_printf("%s (%s)", context->accountname,
 		proto_name);
 	    row = g_list_append(row, item);
-	    otrg_keylist_strings = g_list_append(otrg_keylist_strings, item);
 	    purple_notify_searchresults_row_add(res, row);
 	    fingerprint = fingerprint->next;
 	}

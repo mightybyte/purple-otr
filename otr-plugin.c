@@ -94,7 +94,6 @@
 PurplePlugin *otrg_plugin_handle;
 void *otrg_keylist_info;
 void *otrg_keylist_handle;
-GList *otrg_keylist_strings;
 
 /* We'll only use the one OtrlUserState. */
 OtrlUserState otrg_plugin_userstate = NULL;
@@ -1128,9 +1127,6 @@ fprint_forget_cb(PurpleConnection *c, GList *row, gpointer data)
 static void
 fprint_close_cb(void *data)
 {
-    g_list_foreach(otrg_keylist_strings, (GFunc)g_free, NULL);
-    g_list_free(otrg_keylist_strings);
-    otrg_keylist_strings = NULL;
     otrg_keylist_info = NULL;
     otrg_keylist_handle = NULL;
 }
