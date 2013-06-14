@@ -21,7 +21,7 @@
 #ifndef __OTRG_UI_H__
 #define __OTRG_UI_H__
 
-#include <libotr/context.h>
+#include <libotr3/context.h>
 
 /* Global and per-buddy preferences */
 typedef struct {

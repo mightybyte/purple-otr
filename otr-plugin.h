@@ -26,8 +26,8 @@
 #include "plugin.h"
 
 /* libotr headers */
-#include <libotr/context.h>
-#include <libotr/userstate.h>
+#include <libotr3/context.h>
+#include <libotr3/userstate.h>
 
 #define PRIVKEYFNAME "otr.private_key"
 #define STOREFNAME "otr.fingerprints"

@@ -36,9 +36,9 @@
 #endif
 
 /* libotr headers */
-#include <libotr/privkey.h>
-#include <libotr/proto.h>
-#include <libotr/message.h>
+#include <libotr3/privkey.h>
+#include <libotr3/proto.h>
+#include <libotr3/message.h>
 
 /* purple-otr headers */
 #include "ui.h"

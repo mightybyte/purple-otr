@@ -25,8 +25,8 @@
 #include "notify.h"
 
 /* libotr headers */
-#include <libotr/proto.h>
-#include <libotr/message.h>
+#include <libotr3/proto.h>
+#include <libotr3/message.h>
 
 /* The various help URLs */
 #define BASE_HELPURL "http://otr-help.cypherpunks.ca/" PIDGIN_OTR_VERSION "/"

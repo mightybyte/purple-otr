@@ -57,11 +57,11 @@
 #endif /* ENABLE_NLS */
 
 /* libotr headers */
-#include <libotr/privkey.h>
-#include <libotr/proto.h>
-#include <libotr/tlv.h>
-#include <libotr/message.h>
-#include <libotr/userstate.h>
+#include <libotr3/privkey.h>
+#include <libotr3/proto.h>
+#include <libotr3/tlv.h>
+#include <libotr3/message.h>
+#include <libotr3/userstate.h>
 
 /* purple-otr headers */
 #include "ui.h"

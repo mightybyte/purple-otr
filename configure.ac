@@ -2,9 +2,9 @@ dnl Process this file with autoconf to produce configure.
 
 AC_INIT(purple-otr, 3.2.1)
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
-AM_INIT_AUTOMAKE([-Wall -Werror])
+AM_INIT_AUTOMAKE([-Wall])
 
 AC_PROG_CC
 
@@ -14,7 +14,7 @@ AM_PROG_LIBTOOL
 
 AM_PATH_LIBGCRYPT(1:1.2.0,,AC_MSG_ERROR(libgcrypt 1.2.0 or newer is required.))
 
-AM_PATH_LIBOTR(3.2.0,,AC_MSG_ERROR(libotr 3.2.0 or newer is required.))
+AM_PATH_LIBOTR3(3.2.0,,AC_MSG_ERROR(libotr3 3.2.0 or newer is required.))
 
 PKG_CHECK_MODULES([EXTRA], [glib-2.0 >= 2.6 gtk+-2.0 >= 2.6 pidgin >= 2.10 purple >= 2.0])
 

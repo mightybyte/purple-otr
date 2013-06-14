@@ -42,11 +42,11 @@
 #endif
 
 /* libotr headers */
-#include <libotr/dh.h>
-#include <libotr/privkey.h>
-#include <libotr/proto.h>
-#include <libotr/message.h>
-#include <libotr/userstate.h>
+#include <libotr3/dh.h>
+#include <libotr3/privkey.h>
+#include <libotr3/proto.h>
+#include <libotr3/message.h>
+#include <libotr3/userstate.h>
 
 /* purple-otr headers */
 #include "otr-plugin.h"

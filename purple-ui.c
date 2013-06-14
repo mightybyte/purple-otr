@@ -25,7 +25,7 @@
 #include <gcrypt.h>
 
 /* libotr headers */
-#include <libotr/privkey.h>
+#include <libotr3/privkey.h>
 
 /* purple headers */
 #include "util.h"
